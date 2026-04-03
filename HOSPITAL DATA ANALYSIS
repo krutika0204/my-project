@@ -1,0 +1,124 @@
+CREATE DATABASE HospitalDB;
+USE HospitalDB;
+
+CREATE TABLE Hospital_Data (
+    Patient_ID INT PRIMARY KEY,
+    Age INT,
+    Gender VARCHAR(10),
+    `Condition` VARCHAR(50),
+    `Procedure` VARCHAR(50),
+    Cost INT,
+    Length_of_Stay INT,
+    Readmission VARCHAR(10),
+    Outcome VARCHAR(20),
+    Satisfaction INT
+);
+
+
+QURIES
+
+-- View all data
+SELECT * FROM Hospital_Data;
+
+-- Select specific columns
+SELECT Patient_ID, Age, Gender, `Condition`
+FROM Hospital_Data;
+
+-- Total patients per condition
+SELECT `Condition`, COUNT(*) AS total_patients
+FROM Hospital_Data
+GROUP BY `Condition`
+ORDER BY total_patients DESC;
+
+-- Total cost per condition
+SELECT `Condition`, SUM(Cost) AS total_cost
+FROM Hospital_Data
+GROUP BY `Condition`
+ORDER BY total_cost DESC;
+
+-- Average cost per procedure
+SELECT `Procedure`, AVG(Cost) AS avg_cost
+FROM Hospital_Data
+GROUP BY `Procedure`
+ORDER BY avg_cost DESC;
+
+-- Readmission rate
+SELECT 
+(SUM(CASE WHEN Readmission='Yes' THEN 1 ELSE 0 END) / COUNT(*)) * 100 
+AS readmission_rate
+FROM Hospital_Data;
+
+-- Average length of stay
+SELECT `Condition`, AVG(Length_of_Stay) AS avg_stay
+FROM Hospital_Data
+GROUP BY `Condition`
+ORDER BY avg_stay DESC;
+
+-- Outcome distribution
+SELECT Outcome, COUNT(*) AS total
+FROM Hospital_Data
+GROUP BY Outcome;
+
+-- Satisfaction analysis
+SELECT `Condition`, AVG(Satisfaction) AS avg_satisfaction
+FROM Hospital_Data
+GROUP BY `Condition`
+ORDER BY avg_satisfaction DESC;
+
+-- Above average cost patients
+SELECT *
+FROM Hospital_Data
+WHERE Cost > (SELECT AVG(Cost) FROM Hospital_Data);
+
+-- Above average stay
+SELECT *
+FROM Hospital_Data
+WHERE Length_of_Stay > (
+    SELECT AVG(Length_of_Stay) FROM Hospital_Data
+);
+
+-- Gender-wise cost
+SELECT Gender, AVG(Cost) AS avg_cost
+FROM Hospital_Data
+GROUP BY Gender;
+
+-- Top 5 costly procedures
+SELECT `Procedure`, SUM(Cost) AS total_cost
+FROM Hospital_Data
+GROUP BY `Procedure`
+ORDER BY total_cost DESC
+LIMIT 5;
+
+-- Recovered patients
+SELECT *
+FROM Hospital_Data
+WHERE Outcome = 'Recovered';
+
+-- Satisfaction vs cost
+SELECT Satisfaction, AVG(Cost) AS avg_cost
+FROM Hospital_Data
+GROUP BY Satisfaction
+ORDER BY Satisfaction DESC;
+
+-- Readmissions by condition
+SELECT `Condition`, COUNT(*) AS readmissions
+FROM Hospital_Data
+WHERE Readmission = 'Yes'
+GROUP BY `Condition`
+ORDER BY readmissions DESC;
+
+-- Create Patient_Info table
+CREATE TABLE Patient_Info AS
+SELECT Patient_ID, Age, Gender
+FROM Hospital_Data;
+
+-- Create Treatment_Info table
+CREATE TABLE Treatment_Info AS
+SELECT Patient_ID, `Condition`, `Procedure`, Cost
+FROM Hospital_Data;
+
+-- Join tables
+SELECT p.Patient_ID, p.Age, t.`Condition`, t.Cost
+FROM Patient_Info p
+JOIN Treatment_Info t 
+ON p.Patient_ID = t.Patient_ID;
